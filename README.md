@@ -263,6 +263,11 @@ process md5sum {
 }
 ```
 
+Invocation:
+```
+nextflow run 3_process_merge.nf -ansi-log false
+```
+
 
 ### [Read fastq files with sample ID](scripts/4_fastq_files.nf)
 
@@ -294,7 +299,17 @@ process countReads {
 ch_bam.view()
 ```
 
+Invocation:
+```
+nextflow run 4_fastq_files.nf -ansi-log false
+```
+
 ### [Import data using manifest file; split data, compute, merge back](scripts/5_manifest_and_chunk.nf)
+
+Invocation:
+```
+nextflow run 5_manifest_and_chunk.nf --datadir $PWD/inputs -ansi-log false
+```
 
 ```
 params.samplefile = 'manifest.txt'
