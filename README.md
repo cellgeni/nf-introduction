@@ -42,6 +42,7 @@ Now we have Nextflow, Snakemake, Cromwell, Galaxy .... :yum:
 *   These are passed between processes/tasks
 *   Units of computation are tasks, each task has its own task directory
 *   A parallelised process will have multiple tasks
+*   Nextflow takes care of linking files between task directories
 *   Task directories show you how NF works, allow inspection / debugging
 
 
@@ -49,6 +50,7 @@ Now we have Nextflow, Snakemake, Cromwell, Galaxy .... :yum:
 *   Channel operations allow us to organise the data flow
 *   No need to handle files after making them, they appear by (channel) magic
 *   Using nextflow operators such as `mix`, `flatten`, `filter`, `map`, `collect` et cetera
+*   Nextflow translates these operations to file-system task directory organisation
 
 
 ## Code examples

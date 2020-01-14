@@ -1,0 +1,2 @@
+foo	foo.txt
+bar	bar.txt
