@@ -157,19 +157,58 @@ node-10-5-1,nfs_s/svd/ws/scripts () tree -a work
 work
 └── 24
     └── 0b94aa028934c3e5983d05d08bf80a
-        ├── .command.begin
-        ├── .command.err
-        ├── .command.log
-        ├── .command.out
-        ├── .command.run
-        ├── .command.sh               <-- contains the code in our shell: section
-        ├── .exitcode
+        ├── .command.begin    <-  sentinel file when task starts
+        ├── .command.err      <-  command stderr
+        ├── .command.log      <-  log output from the executor; could (only) contain command stderr
+        ├── .command.out      <-  command stdout
+        ├── .command.run      <-  contains tracing code, environment set-up e.g. singularity
+        ├── .command.sh       <-  contains the code in our shell: section, nothing else
+        ├── .exitcode         <-  what it says on the tin
         ├── chunk_aa
         ├── chunk_ab
-        ├── chunk_ac
+        ├── chunk_ac          >-  the outputs of our shell: section
         ├── chunk_ad
         └── chunk_ae
 ```
+
+If something goes wrong during a pipeline execution,
+you can change to the directory and inspect `.command.err`, `.command.out`, and `.command.log`, and
+also inspect any input files to the process. These are not present in this example, but will be
+symbolic links to files in other task directories if present (see later examples).
+
+Issue `bash .command.run` to re-run the command interactively. You can make changes to `.command.sh`
+or change your environment if useful.
+
+
+###  Scripts
+
+Bigger scripts can be put in a `bin` directory at the same level as the nextflow script that is being run.
+This is how nextfow pipelines are structured in git repositories. Scripts and programs that are in your
+environment are also available of course. The above script can be run like this:
+
+```
+params.str    = 'the quick brown dog jumps over a lazy dog'
+params.outdir = 'results'
+
+process splitLetters {
+
+    tag "letters"
+
+    publishDir "${params.outdir}/1", mode: 'link'
+
+    output:
+    file 'chunk_*'
+
+    shell:
+    '''
+    myscript.sh "!{params.str}"
+    '''
+}
+```
+
+As we have the script `myscript.sh` in the bin directory. Note that it does not need to be in the PATH
+variable. Any type of script (Python, R, Julia et cetera) can be used.
+
 
 ###  Using multiple CPUs
 
@@ -238,6 +277,10 @@ process convertToUpper {
 
 ch_morestuff.view()                             // -------- useful inspection ------ //
 ```
+
+In this example we use `!{task.index}` to make the output file names unique, but will
+normally not be necessary; meaningful file names can be constructed from a sample if for
+example, as shown in later examples.
 
 Example invocations:
 ```
@@ -444,6 +487,17 @@ process samples_gather {
 }
 ```
 
+
+###  Github repositories
+
+If something looks like a github repository, Nextflow will download it.
+
+```
+nextflow run cellgeni/rnaseq --fastqdir adir --samplefile manifest.txt
+```
+
+will clone the repository and run the file `main.nf` in that repository.
+Any custom scripts that are needed are present in the `bin` directory in the repository.
 
 ### Further notes/topics
 
