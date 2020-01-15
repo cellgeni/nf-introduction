@@ -205,6 +205,24 @@ process splitLetters {
 As we have the script `myscript.sh` in the bin directory. Note that it does not need to be in the PATH
 variable. Any type of script (Python, R, Julia et cetera) can be used.
 
+###  Resuming a pipeline
+
+Example invocations:
+```
+./nextflow run 1_a_process.nf -resume
+```
+
+If you add `-resume` to the nextflow command line, Nextflow will re-use as many
+of the cached results in the work directory as it can.  If the previous
+pipeline invocation (with the same parameters, the same input, and the same
+code) ran to completion, Nextflow will not run any new processes.  If the
+pipeline previously failed for some reason (e.g. compute node failed, disk
+quota exceeded, program not found), you can fix the problem and rerun with
+`-resume`. Nextflow will re-use all the successful tasks and continue where it
+left off. Changing a process in the pipeline will invalidate the cached results
+for that process, but cached result for other processes are not affected as long
+as they are not downstream of the changed process.
+
 
 ###  Using multiple CPUs
 
