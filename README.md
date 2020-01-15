@@ -72,7 +72,7 @@ withName: myniceprocess1 {
   memory = 30.GB
 }
 withName: myniceprocess2 {
-  cpus = 4                  // This requires 
+  cpus = 4                           // Needs hook; see below
   memory = 20.GB
 }
 
