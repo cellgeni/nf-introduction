@@ -36,7 +36,7 @@ process do_a_sample_chunk {
 
   input: set val(sample_id), file(chunk) from ch_chunks
 
-  output: set val(sample_id), file('*.max') into ch_reduced
+  output: set val(sample_id), file('*.max') into ch_scatter
 
   shell:
   '''
@@ -45,12 +45,12 @@ process do_a_sample_chunk {
   '''
 }
 
-process samples_result {
+process samples_gather {
   echo true
 
   publishDir "${params.outdir}/5", mode: 'link'
 
-  input: set val(sample_id), file(maxes) from ch_reduced.groupTuple()     // re-unite the chunks
+  input: set val(sample_id), file(maxes) from ch_scatter.groupTuple()     // re-unite the chunks
   output: file('*.integrated')
 
   shell:

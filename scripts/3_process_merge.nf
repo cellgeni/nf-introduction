@@ -27,7 +27,7 @@ process convertToUpper {
     file x from ch_letters.flatten()
 
     output:
-    file('*.txt') into ch_md5sum
+    file('*.txt') into ch_merge
 
     shell:
     '''
@@ -35,14 +35,14 @@ process convertToUpper {
     '''
 }
 
-process md5sum {
+process mergeData {
 
     echo true
 
     publishDir "${params.outdir}/3", mode: 'link'
 
     input:
-    file inputs from ch_md5sum.collect()
+    file inputs from ch_merge.collect()
 
     output:
     file('summary.txt')

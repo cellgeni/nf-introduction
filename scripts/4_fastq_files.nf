@@ -4,7 +4,7 @@ Channel
     .view()
     .set { ch_fastq_align }
 
-process countReads {
+process alignReads {
   echo true
 
   input: set val(sample_id), file(fastqs) from ch_fastq_align

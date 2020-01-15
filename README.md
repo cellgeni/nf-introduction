@@ -54,6 +54,50 @@ Now we have Nextflow, Snakemake, Cromwell, Galaxy .... :yum:
 *   Nextflow translates these operations to file-system task directory organisation
 
 
+## Configuration and executor
+
+This is well documented (see end of this presentation), and can be copied/modified
+from existing pipelines. In the simplest case, local executor, use this:
+
+
+```
+executor {
+    name   = 'local'
+    cpus   = 16
+    memory = '48GB'
+}
+
+withName: myniceprocess1 {
+  cpus = 2
+  memory = 30.GB
+}
+withName: myniceprocess2 {
+  cpus = 4                  // This requires 
+  memory = 20.GB
+}
+
+```
+
+e.g. in a file `local.config` and add `-c local.config` to the nextflow command line.
+This is useful for example on an Openstack instance. If the instance has N GB, specify
+N-4 GB in the config (leave 4 for nextflow itself), and leave one or two CPUs for Nextflow.
+
+With the above, Nextflow will calculate how many jobs it can run concurrently using all CPUs
+and memory (but not more).
+
+Use the Nextflow option `-with-report` to get a very pretty report on time, disk, and memory usage.
+
+Finally, configuration is powerful, and allows e.g.
+
+```
+  withName: star {
+    errorStrategy = { task.exitStatus == 130 ? 'retry' : 'ignore' }
+    cpus = {  8 * Math.min(2, task.attempt) }
+                          // Note below grows to about 100GB on 2 retries.
+    memory = {  40.GB * task.attempt * 1.6 ** (task.attempt - 1) }
+  }
+```
+
 ## Code examples
 
 
@@ -67,8 +111,7 @@ Nextflow is a unix tool: you put files in, and you get more files.
 
 This introduction focuses heavily on channels and files. Towards the very end
 it may be a tiny bit overwhelming; but the reward is a fully functional non-trivial
-little pipeline with manifest file, input reading, and map/reduce parallelisation.
-
+little pipeline with manifest file, input reading, and scatter/gather parallelisation.
 
 
 ### [A single process](scripts/1_a_process.nf)
@@ -128,6 +171,31 @@ work
         └── chunk_ae
 ```
 
+###  Using multiple CPUs
+
+If the process can use multiple CPUs you have to tell it how many using the
+Nextflow `task` object. Processes do not magically know this. These are
+examples from `shell:` sections in our rnaseq pipeline:
+
+```
+samtools merge -@ !{task.cpus} -f !{outcramfile} !{crams}
+
+fastqc -t !{task.cpus} -q !{reads}
+
+bracer assemble -p !{task.cpus} -s !{spec} out-!{samplename} out_asm f1 f2
+
+  STAR --genomeDir !{index} \\
+      --sjdbGTFfile !{gtf} \\
+      --readFilesIn !{reads} --readFilesCommand zcat \\
+      --runThreadN !{task.cpus} \\
+      --twopassMode Basic \\
+      --outWigType bedGraph \\
+      --outSAMtype BAM SortedByCoordinate \\
+      --outSAMunmapped Within \\
+      --runDirPerm All_RWX \\
+      --quantMode GeneCounts \\
+      --outFileNamePrefix !{samplename}.
+```
 
 ###  Understanding channels and files is key to working with Nextflow
 
@@ -245,15 +313,15 @@ process convertToUpper {
     publishDir "${params.outdir}/3", mode: 'link'
 
     input: file x from ch_letters.flatten()
-    output: file('*.txt') into ch_md5sum
+    output: file('*.txt') into ch_merge
 
     shell: 'cat !{x} | tr "[a-z]" "[A-Z]" > hw.!{task.index}.txt'
 }
-process md5sum {
+process mergeData {
     echo true
     publishDir "${params.outdir}/3", mode: 'link'
 
-    input: file inputs from ch_md5sum.collect()
+    input: file inputs from ch_merge.collect()
     output: file('summary.txt')
 
     shell:
@@ -278,7 +346,7 @@ Channel
     .view()
     .set { ch_fastq_align }
 
-process countReads {
+process alignReads {
   echo true
 
   input: set val(sample_id), file(fastqs) from ch_fastq_align
@@ -351,7 +419,7 @@ process do_a_sample_chunk {
 
   input: set val(sample_id), file(chunk) from ch_chunks
 
-  output: set val(sample_id), file('*.max') into ch_reduced
+  output: set val(sample_id), file('*.max') into ch_scatter
 
   shell:
   '''
@@ -360,12 +428,12 @@ process do_a_sample_chunk {
   '''
 }
 
-process samples_result {
+process samples_gather {
   echo true
 
   publishDir "${params.outdir}/5", mode: 'link'
 
-  input: set val(sample_id), file(maxes) from ch_reduced.groupTuple()     // re-unite the chunks
+  input: set val(sample_id), file(maxes) from ch_scatter.groupTuple()     // re-unite the chunks
   output: file('*.integrated')
 
   shell:
@@ -377,9 +445,11 @@ process samples_result {
 ```
 
 
-### Further topics
+### Further notes/topics
 
 
+* `shell:` is a relatively new feature, many pipelines still use `script:`. They are
+  identical except that `shell` has much cleaner variable interpolation. Use `shell:`.
 * Nextflow is based on Java/groovy, no need to know either
 * DSL2
   - allows re-use of processes and sub-workflows
