@@ -124,7 +124,7 @@ process splitLetters {
 
     tag "letters"
 
-    publishDir "${params.outdir}/0", mode: 'link'
+    publishDir "${params.outdir}/1", mode: 'link'
 
     output:
     file 'chunk_*'
