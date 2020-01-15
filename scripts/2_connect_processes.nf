@@ -4,8 +4,6 @@ params.outdir = 'results'
 
 process splitLetters {
 
-    tag "letters"
-
     publishDir "${params.outdir}/2", mode: 'link'
 
     output:
@@ -18,8 +16,6 @@ process splitLetters {
 }
 
 process convertToUpper {
-
-    tag "upper"
 
     publishDir "${params.outdir}/2", mode: 'link'
 

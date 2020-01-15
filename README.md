@@ -122,8 +122,6 @@ params.outdir = 'results'
 
 process splitLetters {
 
-    tag "letters"
-
     publishDir "${params.outdir}/1", mode: 'link'
 
     output:
@@ -192,8 +190,6 @@ params.outdir = 'results'
 
 process splitLetters {
 
-    tag "letters"
-
     publishDir "${params.outdir}/1", mode: 'link'
 
     output:
@@ -250,7 +246,7 @@ params.str    = 'the quick brown dog jumps over a lazy dog'
 params.outdir = 'results'
 
 process splitLetters {
-    tag "letters"
+
     publishDir "${params.outdir}/2", mode: 'link'
 
     output: file 'chunk_*' into ch_letters
@@ -262,7 +258,7 @@ process splitLetters {
 }
 
 process convertToUpper {
-    tag "upper"
+
     publishDir "${params.outdir}/2", mode: 'link'
 
     input: file x from ch_letters.flatten()     // -------- parallelisation! ------- //
@@ -279,8 +275,8 @@ ch_morestuff.view()                             // -------- useful inspection --
 ```
 
 In this example we use `!{task.index}` to make the output file names unique, but will
-normally not be necessary; meaningful file names can be constructed from a sample if for
-example, as shown in later examples.
+normally not be necessary; meaningful file names can be constructed from a sample ID for
+example, as shown later here.
 
 Example invocations:
 ```

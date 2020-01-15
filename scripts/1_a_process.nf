@@ -4,8 +4,6 @@ params.outdir = 'results'
 
 process splitLetters {
 
-    tag "letters"
-
     publishDir "${params.outdir}/1", mode: 'link'
 
     output:
